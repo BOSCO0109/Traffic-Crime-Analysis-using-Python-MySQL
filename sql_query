@@ -1,21 +1,21 @@
-#The below function is used to see all the data in sql
+#(1)The below function is used to see all the data in sql
 select * from traffic_police_project;
 
-#The Below function is used to see that which vechile has high number of drug_related_case
+#(2)The Below function is used to see that which vechile has high number of drug_related_case
 select vehicle_number, count(*) as drug_related_case from traffic_police_project where drugs_related_stop=1 group by  vehicle_number limit 10;
 
-#The Below function is used to see that which vechile has high number of searched_vechile
+#(3)The Below function is used to see that which vechile has high number of searched_vechile
 select vehicle_number, count(*) as searched_vechile from traffic_police_project where search_conducted=1 group by vehicle_number ;
 
-#The Below function is used to see that which age catageory has high number of stop_outcome
+#(4)The Below function is used to see that which age catageory has high number of stop_outcome
 select driver_age,stop_outcome,count(stop_outcome) from traffic_police_project where stop_outcome = 'Arrest' group by driver_age order by count(stop_outcome) desc; 
 
-#The Below function is used to see that which country and gender has high number of drivers stopped
+#(5)The Below function is used to see that which country and gender has high number of drivers stopped
 select country_name ,sum(case when driver_gender='M' then 1 else 0 end) as male_count,sum(case when driver_gender='F' then 1 else 0 end) as female_count from traffic_police_project group by country_name;
 
-#The Below function is used to see that how many country in the row
+#(6)The Below function is used to see that how many country in the row
 select distinct country_name from traffic_police_project group by country_name; 
 
-#The Below function is used to see the race and gender combination has the highest search rate
+#(7)The Below function is used to see the race and gender combination has the highest search rate
 select driver_race , driver_gender ,count(*) as total_shape , SUM(CASE WHEN search_conducted = 1 THEN 1 ELSE 0 END) AS total_searches ,round(sum(CASE WHEN search_conducted = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),2) as search_rate from traffic_police_project group by driver_race , driver_gender order by search_rate desc;
 
