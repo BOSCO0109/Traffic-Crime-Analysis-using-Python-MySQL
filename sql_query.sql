@@ -53,3 +53,11 @@ select country_name , violation , sum(case when is_arrested=1 then 1 else 0 end)
 #(16)This below query is used to show case the Which country has the most stops with search conducted
 select country_name , sum(case when search_conducted=1 then 1 else 0 end) as total from traffic_police_project group by country_name order by total desc;
 
+
+#complex (1) this query is used to get the number of case that lead to arrest when search by year and country order.
+select year(str_to_date(stop_date, '%d-%m-%y')) as year , 
+country_name ,COUNT(CASE WHEN search_conducted = 1 THEN 1 END) AS search_conducted , 
+count(stop_outcome) as stop_outcome , sum(case when search_conducted=1 then 1 else 0 end) as search , 
+sum(case when stop_outcome='Arrest' then  1 else 0 end) as arrest , 
+round(sum(case when stop_outcome='Arrest' then 1 else 0 end) * 100/ sum(case when search_conducted=1 then  1 else 0 end),2) as lead_to_arrest_when_search 
+from traffic_police_project group by country_name ,year(str_to_date(stop_date, '%d-%m-%y')) order by lead_to_arrest_when_search desc ;
