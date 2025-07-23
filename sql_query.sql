@@ -61,3 +61,54 @@ count(stop_outcome) as stop_outcome , sum(case when search_conducted=1 then 1 el
 sum(case when stop_outcome='Arrest' then  1 else 0 end) as arrest , 
 round(sum(case when stop_outcome='Arrest' then 1 else 0 end) * 100/ sum(case when search_conducted=1 then  1 else 0 end),2) as lead_to_arrest_when_search 
 from traffic_police_project group by country_name ,year(str_to_date(stop_date, '%d-%m-%y')) order by lead_to_arrest_when_search desc ;
+
+#The below code is used to see the Driver Violation Trends Based on Age and Race (Join with Subquery)
+with cases as(
+select
+driver_age ,
+driver_race  ,
+count(*) as Total_count
+from traffic_police_project 
+group by driver_age ,driver_race
+)
+select 
+A.violation , A.driver_age , A.driver_race ,count(*) as total_numbers ,round(count(*)*100 / B.Total_count,1) as percentage from traffic_police_project A join cases B on A.driver_age = B.driver_age and 
+A.driver_race = B.driver_race group by A.violation , A.driver_age , A.driver_race , B.Total_count order by A.violation , A.driver_age , A.driver_race asc;
+
+#This below query is used to check the number of stop done in single year using join function
+with No_days as(
+select extract(day from str_to_date(stop_date, '%d-%m-%Y' )) as dayy,
+ extract(year from str_to_date(stop_date,'%d-%m-%Y')) as yearr,
+ extract(month from str_to_date(stop_date,'%d-%m-%Y')) as monthh, 
+ count(*) as total_time from traffic_police_project group by dayy,monthh,yearr)
+
+select extract(day from str_to_date(A.stop_date, '%d-%m-%Y' )) as dayy,
+ extract(year from str_to_date(A.stop_date,'%d-%m-%Y')) as yearr,
+ extract(month from str_to_date(A.stop_date,'%d-%m-%Y')) as monthh,
+ count(*) from  traffic_police_project A join No_days B 
+ ON EXTRACT(DAY FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y')) = B.dayy
+  AND EXTRACT(MONTH FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y')) = B.monthh
+  AND EXTRACT(YEAR FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y')) = B.yearr 
+  group by   EXTRACT(DAY FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y')),
+  EXTRACT(MONTH FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y')),
+  EXTRACT(YEAR FROM STR_TO_DATE(A.stop_date, '%d-%m-%Y'));
+  
+#This below query is used to check the number of stops done in a day in single year using join function
+select extract(day from str_to_date(stop_date,'%d-%m-%Y'))as dayy,
+extract(month from str_to_date(stop_date,'%d-%m-%Y'))as monthh,
+(hour (str_to_date(stop_time, '%H:%i:%s')))as hourr ,count(*) as total
+from traffic_police_project group by dayy,monthh ,hourr;
+
+#Violations with High Search and Arrest Rates (Window Function)
+select violation , search_type,stop_date, case when is_arrested= 1 then 1 else 0 end as arrest  , sum(case when is_arrested= 1 then 1 else 0 end ) over (partition by violation , search_type order by stop_date) as AA from traffic_police_project order by violation , search_type,stop_date;
+
+#This below code is used to check the Driver Demographics by Country (Age, Gender, and Race)
+select country_name , count(driver_age) as total_driver , sum(case when driver_gender='M' then 1 else 0 end) as male , sum(case when driver_gender='F' then 1 else 0 end) as female , 
+round(avg(driver_age),1) as avg_age ,count(distinct(driver_race)) as ttl_race from  traffic_police_project group by country_name;
+
+#This below code is used to check the Top 5 Violations with Highest Arrest Rates
+select violation , sum(case when is_arrested =1 then 1 else 0 end) as arrest ,ROUND(SUM(CASE WHEN is_arrested = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate from traffic_police_project group by violation order by arrest desc limit 5 ;
+
+select * from traffic_police_project;
+select * from traffic_police_project where stop_date = '01-01-2020';
+select distinct(driver_race) from traffic_police_project;
